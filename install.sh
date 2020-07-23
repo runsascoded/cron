@@ -8,10 +8,11 @@ if [ $# -ne 1 -a $# -ne 2 ]; then
 fi
 
 schedule="$1"; shift
+cwd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 if [ $# -gt 0 ]; then
     dir="$1"; shift
 else
-    cwd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     basename="$(basename "$cwd")"
 
     if ! [ -f "$cwd/.git" ]; then #|| [ "$(cat "$cwd/.git")" != "gitdir: ../.git/modules/$basename" ]; then
