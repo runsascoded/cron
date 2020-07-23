@@ -2,11 +2,11 @@
 #
 # Call this script, by its absolute path, from your crontab, e.g.:
 #
-# mkdir -p "$HOME/bin" && wget -O "$HOME/bin/crontab.sh" https://j.mp/_cron && chmod u+x "$HOME/bin/crontab.sh"
-# echo "34 12 * * * /bin/crontab.sh <dir>" | crontab
+# mkdir -p "$HOME/bin" && wget -O "$HOME/bin/cron.sh" https://j.mp/_cron && chmod u+x "$HOME/bin/cron.sh"
+# echo "34 12 * * * /bin/cron.sh <dir>" | crontab
 #
-# - <dir> should contain an executable `crontab.sh` script that will be run on the cron schedule above.
-# - It will be mounted into an outer "cron" Docker container at /mnt, and /mnt/crontab.sh will be run
+# - <dir> should contain an executable `cron.sh` script that will be run on the cron schedule above.
+# - It will be mounted into an outer "cron" Docker container at /mnt, and /mnt/cron.sh will be run
 # - {stdout,stderr} will be logged to /tmp/{out,err} in the outer "cron" Docker container.
 
 set -e
@@ -16,7 +16,7 @@ if [ $# -ne 1 -a $# -ne 2 ]; then
     exit 1
 fi
 
-# Passed in directory will be mounted in outer Docker under /mnt, and /mnt/crontab.sh will be run
+# Passed in directory will be mounted in outer Docker under /mnt, and /mnt/cron.sh will be run
 dir="$1"; shift
 name"$1"; shift
 if [ -z "$name" ]; then
