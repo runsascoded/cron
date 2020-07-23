@@ -29,7 +29,6 @@ fi
 
 docker run \
     --name "$name" \
-    -v "$(which docker):/bin/docker" \
     -v "/var/run/docker.sock:/var/run/docker.sock" \
     -v "$dir:/mnt" \
     runsascoded/cron \
