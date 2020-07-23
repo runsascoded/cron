@@ -11,7 +11,7 @@ schedule="$1"; shift
 cwd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ $# -gt 0 ]; then
-    dir="$1"; shift
+    dir="$(cd "$1" && pwd)"; shift
 else
     basename="$(basename "$cwd")"
 
@@ -41,6 +41,10 @@ fi
 
 docker_dir="$(dirname "$(which docker)")"
 
-echo "$schedule PATH=\"$docker_dir:\$PATH\" \"$cwd/cron.sh\" \"$dir\"" | crontab
+cat <<EOF |
+PATH="/usr/bin:/bin:$docker_dir"
+$schedule "$cwd/cron.sh" "$dir"
+EOF
+crontab
 echo "New crontab:"
 crontab -l
