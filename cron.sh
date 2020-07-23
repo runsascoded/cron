@@ -20,7 +20,7 @@ fi
 
 now="$(date '+%Y%m%dT%H%M%S')"
 # Passed in directory will be mounted in outer Docker under /mnt, and /mnt/run.sh will be run
-dir="$1"; shift
+dir="$(cd "$1" && pwd)"; shift
 if [ $# -gt 0 ]; then
     name="$1"; shift
 else
