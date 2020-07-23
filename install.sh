@@ -29,7 +29,7 @@ else
         echo "Unrecognized Git dir found in $cwd/.git: $git_file" >&2
         exit 20
     fi
-    dir="$(cd "$dir" && pwd)"
+    dir="$(cd "$cwd" && cd "$dir" && pwd)"
     echo "Installing module $dir"
 fi
 
