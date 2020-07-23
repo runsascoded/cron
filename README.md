@@ -8,6 +8,12 @@ Download [`cron.sh`] and make it executable:
 curl https://j.mp/_cron > "$HOME/bin/cron.sh" && chmod u+x "$HOME/bin/cron.sh"
 ```
 
+### As a submodule <a id="#install-submodule"></a>
+Alternatively, clone this repo, or add it as a submodule of a project you intend to use it with:
+```bash
+git submodule add https://github.com/runsascoded/cron
+```
+
 ## Use
 Call [`cron.sh`] from your crontab, passing a directory you want to run a script from:
 
@@ -19,6 +25,19 @@ echo "34 12 * * * $HOME/bin/cron.sh <dir>" | crontab
 - `<dir>` should contain an executable `run.sh` script that will be run on the cron schedule above
 - `<dir>` will be mounted into an outer "cron" Docker container at `/mnt`, and `/mnt/run.sh` will be run
 - {stdout,stderr} from running `<dir>/run.sh` (inside Docker, as `/mnt/run.sh`) will be logged to /tmp/{out,err} (in the outer "cron" Docker container)
+
+### From a Git clone: `install.sh`
+From a clone of this repo, `install.sh` can simplify adding the necessary line to your `crontab`:
+```
+install.sh "34 12 * * *" <dir>
+```
+where `<dir>` is the same as [above](#use).
+
+If you've [added this repo as a submodule](#install-submodule) to the repo intended to be operated on, that repo will be inferred as the `<dir>` argument:
+
+```bash
+install.sh "34 12 * * *"
+```
 
 ## Example
 See [examples/hello-world/run.sh] for an example directory suitable to be passed to `cron.sh`.
@@ -85,4 +104,5 @@ crontab -l | head -n -1 | crontab
 
 
 [`cron.sh`]: cron.sh
-[examples/hello-world/run.sh]: examples/hello-world/run.sh
+[`install.sh`]: install.sh
+[examples/hello-world/run.sh]: examples/hello-world/run
