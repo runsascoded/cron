@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -l
+#!/usr/bin/env bash
 #
 # Call this script from your crontab, passing a directory you want to run a script from:
 #

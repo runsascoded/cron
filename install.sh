@@ -38,6 +38,8 @@ if ! [ -x "$dir/run.sh" ]; then
     exit 100
 fi
 
-echo "$schedule \"$cwd/cron.sh\" \"$dir\"" | crontab
+docker_dir="$(dirname "$(which docker)")"
+
+echo "$schedule PATH=\"$docker_dir:\$PATH\" \"$cwd/cron.sh\" \"$dir\"" | crontab
 echo "New crontab:"
 crontab -l
