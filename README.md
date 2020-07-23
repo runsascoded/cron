@@ -4,7 +4,7 @@ Simple docker cron runner for easy persistence of runs, with docker-in-docker su
 ## Install
 Install `cron.sh`, e.g. in `~/bin`:
 ```bash
-# Install cron.sh, e.g. in
+# Install cron.sh, e.g. in `~/bin`:
 bin="$HOME/bin" \
 mkdir -p "$bin" && \
 wget -O "$bin/cron.sh" https://j.mp/_cron && \
