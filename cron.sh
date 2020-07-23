@@ -33,4 +33,5 @@ docker run \
     -v "/var/run/docker.sock:/var/run/docker.sock" \
     -v "$dir:/mnt" \
     runsascoded/cron \
-    "$now"
+    "$now" \
+    "$@"
