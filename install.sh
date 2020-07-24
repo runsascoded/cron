@@ -2,16 +2,42 @@
 
 set -e
 
-if [ $# -ne 1 -a $# -ne 2 ]; then
-    echo "Usage: $0 <cron schedule> [dir]" >&2
+declare -a ARGS
+logs=1
+unset name
+while [ $# -gt 0 ]
+do
+    unset OPTIND
+    unset OPTARG
+    while getopts ":Ln:" opt
+    do
+      case "$opt" in
+        L) logs= ;;
+        n) name="$OPTARG" ;;
+        *) ;;
+      esac
+    done
+    shift $((OPTIND-1))
+    ARGS+=("$1")
+    shift
+done
+
+num=${#ARGS[@]}
+if [ $num -eq 0 -o $num -gt 3 ]; then
+    echo "Usage: $0 <cron schedule> [-n name] [-d dir] [-L] [args...]" >&2
+    if [ $num -gt 0 ]; then
+        echo "Extra args: $@" >&2
+    else
+        echo "Missing args" >&2
+    fi
     exit 1
 fi
 
-schedule="$1"; shift
+schedule="${ARGS[0]}"; ARGS=("${ARGS[@]:1}")
 cwd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [ $# -gt 0 ]; then
-    dir="$(cd "$1" && pwd)"; shift
+if [ ${#ARGS[@]} -gt 0 ]; then
+    dir="$(cd "${ARGS[0]}" && pwd)"; ARGS=("${ARGS[@]:1}")
 else
     basename="$(basename "$cwd")"
 
@@ -39,12 +65,33 @@ if ! [ -x "$dir/run.sh" ]; then
     exit 100
 fi
 
-docker_dir="$(dirname "$(which docker)")"
+# Basic crontab line: schedule, run script (cron.sh), directory target
+cmd="$schedule \"$cwd/cron.sh\""
 
-cat <<EOF |
-PATH="/usr/bin:/bin:$docker_dir"
-$schedule "$cwd/cron.sh" "$dir"
-EOF
-crontab
+# If a container basename was provided, pass it through
+if [ -n "$name" ]; then
+    cmd="$cmd -n \"$name\""
+fi
+
+# If the Docker executable is not on sh's usual $PATH (/usr/bin:/bin), pass its directory explicitly to cron.sh
+docker_dir="$(dirname "$(which docker)")"
+if [ "$docker_dir" != /usr/bin -a "$docker_dir" != /bin ]; then
+    cmd="$cmd -x \"$docker_dir\""
+fi
+
+# Append directory-target positional arg
+cmd="$cmd \"$dir\""
+
+for arg in ${ARGS[@]}; do
+    cmd="$cmd \"$arg\""
+done
+
+# Optionally log to cron.{out,err} in the target directory
+if [ -n "$logs" ]; then
+    cmd="$cmd >>\"$dir/cron.out\" 2>>\"$dir/cron.err\""
+fi
+
+(set +e; crontab -l 2>/dev/null; echo "$cmd") | crontab
+
 echo "New crontab:"
 crontab -l

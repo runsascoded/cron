@@ -8,6 +8,8 @@ Download [`cron.sh`] and make it executable:
 curl https://j.mp/_cron > "$HOME/bin/cron.sh" && chmod u+x "$HOME/bin/cron.sh"
 ```
 
+(https://j.mp/_cron is just a bit.ly link to this repo's `master`-branch [`cron.sh`])
+
 ### As a submodule <a id="#install-submodule"></a>
 Alternatively, clone this repo, or add it as a submodule of a project you intend to use it with:
 ```bash
@@ -15,16 +17,17 @@ git submodule add https://github.com/runsascoded/cron
 ```
 
 ## Use
-Call [`cron.sh`] from your crontab, passing a directory you want to run a script from:
+Call [`cron.sh`] from your crontab, passing a "module" directory you want to run:
 
 ```bash
 echo "34 12 * * * $HOME/bin/cron.sh <dir>" | crontab
 ```
 
-- Call `cron.sh` by its absolute path, unless you install it somewhere that `crontab` will pick up, (e.g. `/usr/bin`, `/bin`)
+Notes:
+- Call `cron.sh` by its absolute path, unless you install it somewhere that `crontab` will pick up (`/usr/bin`, `/bin`)
 - `<dir>` should contain an executable `run.sh` script that will be run on the cron schedule above
-- `<dir>` will be mounted into an outer "cron" Docker container at `/mnt`, and `/mnt/run.sh` will be run
-- {stdout,stderr} from running `<dir>/run.sh` (inside Docker, as `/mnt/run.sh`) will be logged to /tmp/{out,err} (in the outer "cron" Docker container)
+- `<dir>` will be mounted into an outer Docker container at `/mnt`, and `/mnt/run.sh` will be run each time the cron schedule fires
+- the outer Docker container will be named like `<name>-YYYYMMDDTHHMMSS`, where `<name>` is an optional second argument to `cron.sh` in the crontab above; by default, the basename of `<dir>` will be used
 
 ### From a Git clone: `install.sh`
 From a clone of this repo, `install.sh` can simplify adding the necessary line to your `crontab`:
@@ -44,10 +47,11 @@ See [examples/hello-world/run.sh] for an example directory suitable to be passed
 
 To run it (from a clone of this repo):
 
-### Install `crontab`
-Append a cron.sh call to crontab:
+### Schedule `crontab`
+Append a `cron.sh` call to crontab, calling [examples/hello-world/run.sh] every minute:
+
 ```bash
-(crontab -l 2>/dev/null; echo "* * * * * $PWD/cron.sh $PWD/examples/hello-world") | crontab
+./install.sh "* * * * *" examples/hello-world
 ```
 
 ### Watch for Docker containers to appear
@@ -63,27 +67,37 @@ CONTAINER ID        IMAGE               COMMAND                  CREATED        
 a907647148d7        runsascoded/cron    "/entrypoint.sh 2020…"   45 seconds ago       Exited (0) 43 seconds ago                           hello-world-20200722T235500
 ```
 
-### Inspect stdout/stderr
-stdout/stderr (from [examples/hello-world/run.sh]) can be viewed in the former container:
+### Inspect logs
+Pull the outer container's logs :
 ```bash
-docker cp hello-world-20200722T235500:/tmp/err -
+docker logs hello-world-20200722T235500
+```
+```
+some stdout
+Fri Jul 24 04:03:00 UTC 2020
+some stderr
+
+Hello from Docker!
+…
 ```
 
-When I run this on macOS, I see a gibberish prefix due to `/tmp/err` being a file from a different OS/filesystem:
-```
-# err0100644000000000000000000000001413706205311007751 0ustar0000000000000000some stderr
-```
-but the true stderr ("`some stderr`") is visible at the end.
+### Inspect stdout/stderr on host
+By default, `install.sh` configures `cron.sh` to write its stdout/stderr to `<dir>/cron.{out,err}`; you can see this by inspecting the generated crontab, which might look something like:
 
-You can also shell into the container and view it cleanly in its natural environment:
-```bash
-docker commit hello-world-20200722T235500 tmp-image
-docker run -it --entrypoint /usr/bin/env tmp-image bash
 ```
-Then, in the container:
+* * * * * "<cron>/cron.sh" -x "/usr/local/bin" "<cron>/examples/hello-world" >>"<cron>/examples/hello-world/cron.out" 2>>"<cron>/examples/hello-world/cron.err"
+```
+
+Passing `-L` to `install.sh` disables this behavior.
+
+### Inspect changed file on host
+In addition to writing the stdout/stderr viewable above, [examples/hello-world/run.sh] appends the date to `examples/hello-world/msgs` each time it runs:
+
 ```bash
-cat /tmp/err
-# some stderr
+cat examples/hello-world/msgs
+```
+```
+Ran at 20200722T235500
 ```
 
 ### Uninstall from `crontab`
